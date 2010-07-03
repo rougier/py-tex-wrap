@@ -509,8 +509,11 @@ if __name__ == '__main__':
     line_lengths = range(120, 20, -10)
     breaks = L.compute_breakpoints( line_lengths,
                                     tolerance = 2)
-    print breaks, len(L)
+    print "# poor man's regression output prior to refactor"
+    print 'breaks == ', breaks
+    print 'len(L) == ', len(L)
 
+    print 'composed == """'
     assert breaks[0] == 0
     line_start = 0
     line = 0
@@ -531,4 +534,4 @@ if __name__ == '__main__':
         line_start = breakpoint + 1
         sys.stdout.write('\n')
 
-    print
+    print '"""'

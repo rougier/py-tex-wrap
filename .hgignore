@@ -1,0 +1,4 @@
+syntax: glob
+.*.swp
+tex_wrap-1.01/*
+*.pyc

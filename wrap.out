@@ -1,0 +1,22 @@
+# poor man's regression output prior to refactor
+breaks ==  [0, 86, 159, 231, 305, 361, 421, 479, 521, 556, 585, 608, 634, 655, 681, 704, 734, 748]
+len(L) ==  749
+composed == """
+Writing this summary was difficult, because there were no large themes in the last two
+weeks of discussion. Instead there were lots and lots of small items; as
+the release date for 2.0b1 nears, people are concentrating on resolving
+outstanding patches, fixing bugs, and making last-minute tweaks. Computes
+a Adler-32 checksum of string. (An Adler-32 checksum is
+almost as reliable as a CRC32 but can be computed much more
+quickly.) If value is present, it is used as the starting
+value of the checksum; otherwise, a fixed
+default value is used. This allows
+computing a running checksum
+over the concatenation
+of several input strings.
+The algorithm is not
+cryptographically strong,
+and should not be used
+for authentication or digital
+signatures. 
+"""
