@@ -286,9 +286,11 @@ class ObjectList(UserList.UserList):
 
         # Precompute lists containing the numeric values for each box.
         # The variable names follow those in Knuth's description.
-        w = [0]*m ;
-        y = [0]*m ; z = [0]*m
-        p = [0]*m ; f = [0]*m
+        w = [0] * m
+        y = [0] * m
+        z = [0] * m
+        p = [0] * m
+        f = [0] * m
         for i in range(m):
             box = self[i]
             w[i] = box.width
@@ -332,94 +334,97 @@ class ObjectList(UserList.UserList):
             # Determine if this box is a feasible breakpoint and
             # perform the main loop if it is.
             if self.is_feasible_breakpoint(i):
-                 if self.debug:
-                     print 'Feasible breakpoint at %i:' % i
-                     print '\tCurrent active node list:', active_nodes
+                if self.debug:
+                    print 'Feasible breakpoint at %i:' % i
+                    print '\tCurrent active node list:', active_nodes
 
-                 if self.debug:
-                     # Print the list of active nodes, sorting them
-                     # so they can be visually checked for uniqueness.
-                     def cmp_f(n1, n2):
-                         return cmp( (n1.line, n1.position, n1.fitness_class),
-                                     (n2.line, n2.position, n2.fitness_class) )
-                     active_nodes.sort(cmp_f)
-                     for A in active_nodes: print A.position, A.line, A.fitness_class
-                     print ; print
+                if self.debug:
+                    # Print the list of active nodes, sorting them
+                    # so they can be visually checked for uniqueness.
+                    def cmp_f(n1, n2):
+                        return cmp( (n1.line, n1.position, n1.fitness_class),
+                                    (n2.line, n2.position, n2.fitness_class) )
+                    active_nodes.sort(cmp_f)
+                    for A in active_nodes:
+                        print A.position, A.line, A.fitness_class
+                    print
+                    print
 
-                 # Loop over the list of active nodes, and compute the fitness
-                 # of the line formed by breaking at A and B.  The resulting
-                 breaks = []                 # List of feasible breaks
-                 for A in active_nodes[:]:
-                     r = self.compute_adjustment_ratio(A.position, i, A.line, line_lengths)
-                     if self.debug:
-                         print '\tr=', r
-                         print '\tline=', A.line
+                # Loop over the list of active nodes, and compute the fitness
+                # of the line formed by breaking at A and B.  The resulting
+                breaks = []                 # List of feasible breaks
+                for A in active_nodes[:]:
+                    r = self.compute_adjustment_ratio(A.position, i,
+                        A.line, line_lengths)
+                    if self.debug:
+                        print '\tr=', r
+                        print '\tline=', A.line
 
-                     # XXX is 'or' really correct here?  This seems to
-                     # remove all active nodes on encountering a forced break!
-                     if (r<-1 or B.is_forced_break()):
-                         # Deactivate node A
-                         if len(active_nodes) == 1:
-                             if self.debug:
-                                 print "Can't remove last node!"
-                                 # XXX how should this be handled?
-                                 # Raise an exception?
-                         else:
-                             if self.debug:
-                                 print '\tRemoving node', A
-                             active_nodes.remove(A)
+                    # XXX is 'or' really correct here?  This seems to
+                    # remove all active nodes on encountering a forced break!
+                    if (r<-1 or B.is_forced_break()):
+                        # Deactivate node A
+                        if len(active_nodes) == 1:
+                            if self.debug:
+                                print "Can't remove last node!"
+                                # XXX how should this be handled?
+                                # Raise an exception?
+                        else:
+                            if self.debug:
+                                print '\tRemoving node', A
+                            active_nodes.remove(A)
 
-                     if -1 <= r <= tolerance:
-                         # Compute demerits and fitness class
-                         if p[i] >= 0:
-                             demerits = (1 + 100 * abs(r)**3L + p[i]) ** 3L
-                         elif self.is_forced_break(i):
-                              demerits = (1 + 100 * abs(r)**3L) ** 2L - p[i]**2L
-                         else:
-                             demerits = (1 + 100 * abs(r)**3L) ** 2L
+                    if -1 <= r <= tolerance:
+                        # Compute demerits and fitness class
+                        if p[i] >= 0:
+                            demerits = (1 + 100 * abs(r)**3L + p[i]) ** 3L
+                        elif self.is_forced_break(i):
+                            demerits = (1 + 100 * abs(r)**3L) ** 2L - p[i]**2L
+                        else:
+                            demerits = (1 + 100 * abs(r)**3L) ** 2L
 
-                         demerits = demerits + (flagged_demerit * f[i] *
-                                                f[A.position])
+                        demerits = demerits + (flagged_demerit * f[i] *
+                                               f[A.position])
 
-                         # Figure out the fitness class of this line (tight, loose,
-                         # very tight or very loose).
-                         if   r < -.5: fitness_class = 0
-                         elif r <= .5: fitness_class = 1
-                         elif r <= 1:  fitness_class = 2
-                         else:         fitness_class = 3
+                        # Figure out the fitness class of this line (tight, loose,
+                        # very tight or very loose).
+                        if   r < -.5: fitness_class = 0
+                        elif r <= .5: fitness_class = 1
+                        elif r <= 1:  fitness_class = 2
+                        else:         fitness_class = 3
 
-                         # If two consecutive lines are in very
-                         # different fitness classes, add to the
-                         # demerit score for this break.
-                         if abs(fitness_class - A.fitness_class) > 1:
-                             demerits = demerits + fitness_demerit
+                        # If two consecutive lines are in very
+                        # different fitness classes, add to the
+                        # demerit score for this break.
+                        if abs(fitness_class - A.fitness_class) > 1:
+                            demerits = demerits + fitness_demerit
 
-                         if self.debug:
-                             print '\tDemerits=', demerits
-                             print '\tFitness class=', fitness_class
+                        if self.debug:
+                            print '\tDemerits=', demerits
+                            print '\tFitness class=', fitness_class
 
-                         # Record a feasible break from A to B
-                         brk = _BreakNode(position = i, line = A.line + 1,
-                                       fitness_class = fitness_class,
-                                       totalwidth = self.sum_width[i],
-                                       totalstretch = self.sum_stretch[i],
-                                       totalshrink = self.sum_shrink[i],
-                                       demerits = demerits,
-                                       previous = A)
-                         breaks.append(brk)
-                         if self.debug:
-                             print '\tRecording feasible break', B
-                             print '\t\tDemerits=', demerits
-                             print '\t\tFitness class=', fitness_class
+                        # Record a feasible break from A to B
+                        brk = _BreakNode(position = i, line = A.line + 1,
+                                      fitness_class = fitness_class,
+                                      totalwidth = self.sum_width[i],
+                                      totalstretch = self.sum_stretch[i],
+                                      totalshrink = self.sum_shrink[i],
+                                      demerits = demerits,
+                                      previous = A)
+                        breaks.append(brk)
+                        if self.debug:
+                            print '\tRecording feasible break', B
+                            print '\t\tDemerits=', demerits
+                            print '\t\tFitness class=', fitness_class
 
-                 # end for A in active_nodes
-                 if breaks:
-                     if self.debug:
-                         print 'List of breaks at ', i, ':', breaks
-                     for brk in breaks:
-                         self.add_active_node(active_nodes, brk)
-            # end if self.feasible_breakpoint()
-        # end for i in range(m)
+                # end for A in active_nodes
+                if breaks:
+                    if self.debug:
+                        print 'List of breaks at ', i, ':', breaks
+                    for brk in breaks:
+                        self.add_active_node(active_nodes, brk)
+           # end if self.feasible_breakpoint()
+       # end for i in range(m)
 
         if self.debug:
             print 'Main loop completed'
@@ -431,10 +436,10 @@ class ObjectList(UserList.UserList):
         _, A = L[0]
 
         if looseness != 0:
-            # The search for the appropriate active node is a bit more
-            # complicated; we look for a node with a paragraph length
-            # that's as close as possible to (A.line+looseness), and
-            # with the minimum number of demerits.
+           # The search for the appropriate active node is a bit more
+           # complicated; we look for a node with a paragraph length
+           # that's as close as possible to (A.line+looseness), and
+           # with the minimum number of demerits.
 
             best = 0
             d = INFINITY
@@ -444,16 +449,16 @@ class ObjectList(UserList.UserList):
                 # are for handling values of looseness that are
                 # either positive or negative.
                 if ((looseness<= delta < best) or
-                    (best<delta<looseness) ):
-                    s = delta
-                    d = br.demerits
-                    b = br
+                      (best<delta<looseness) ):
+                      s = delta
+                      d = br.demerits
+                      b = br
 
                 elif delta == best and br.demerits < d:
-                    # This break is of the same length, but has fewer
-                    # demerits and hence is a more attractive one.
-                    d = br.demerits
-                    b = br
+                      # This break is of the same length, but has fewer
+                      # demerits and hence is a more attractive one.
+                      d = br.demerits
+                      b = br
 
             A = b
 
@@ -484,8 +489,8 @@ if __name__ == '__main__':
     authentication or digital signatures."""
     text = string.join( string.split(text) )
 
-    line_width = 100                    # Line width to use for formatting
-    full_justify = 0                    # Boolean; if true, do full justification
+    line_width = 100          # Line width to use for formatting
+    full_justify = 0          # Boolean; if true, do full justification
     # Turn chunk of text into an ObjectList.
     L = ObjectList()
     for ch in text:
